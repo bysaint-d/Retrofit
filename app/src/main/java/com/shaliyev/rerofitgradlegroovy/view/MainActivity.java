@@ -21,10 +21,15 @@ import com.shaliyev.rerofitgradlegroovy.service.CryptoAPI;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     Retrofit retrofit;
     RecyclerView recyclerView;
     RecyclerViewAdapter recyclerViewAdapter;
+
+    CompositeDisposable compositeDisposable;
 
 
     @Override
@@ -55,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
         retrofit = new Retrofit.Builder()
                 .baseUrl(Base_URL)
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         loadData();
@@ -64,6 +72,14 @@ public class MainActivity extends AppCompatActivity {
 
         CryptoAPI cryptoAPI = retrofit.create(CryptoAPI.class);
 
+        compositeDisposable = new CompositeDisposable();
+
+        compositeDisposable.add(cryptoAPI.getData()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(MainActivity.this::handleResponse));
+
+/*
         Call<List<CryptoModel>> call = cryptoAPI.getData();
 
         call.enqueue(new Callback<List<CryptoModel>>() {
@@ -81,11 +97,11 @@ public class MainActivity extends AppCompatActivity {
                     recyclerViewAdapter = new RecyclerViewAdapter(cryptoModels);
                     recyclerView.setAdapter(recyclerViewAdapter);
 
-                    /*for (CryptoModel crypto : responseList) {
+                    for (CryptoModel crypto : responseList) {
                         System.out.println(crypto.currency);
                         System.out.println(crypto.price);
                     }
-                    */
+
 
                 }
             }
@@ -96,8 +112,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+ */
+
+    }
+    private void handleResponse(List<CryptoModel> cryptoModelList)
+    {
+        cryptoModels = new ArrayList<>(cryptoModelList);
+
+        //recycleadap
+        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        recyclerViewAdapter = new RecyclerViewAdapter(cryptoModels);
+        recyclerView.setAdapter(recyclerViewAdapter);
+
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-
+        compositeDisposable.clear();
+    }
 }
