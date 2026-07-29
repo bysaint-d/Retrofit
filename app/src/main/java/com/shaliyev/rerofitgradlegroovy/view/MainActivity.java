@@ -8,11 +8,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.shaliyev.rerofitgradlegroovy.R;
+import com.shaliyev.rerofitgradlegroovy.adapter.RecyclerViewAdapter;
 import com.shaliyev.rerofitgradlegroovy.model.CryptoModel;
 import com.shaliyev.rerofitgradlegroovy.service.CryptoAPI;
 
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private String Base_URL = "https://raw.githubusercontent.com/";
     Retrofit retrofit;
     RecyclerView recyclerView;
+    RecyclerViewAdapter recyclerViewAdapter;
 
 
     @Override
@@ -73,10 +76,17 @@ public class MainActivity extends AppCompatActivity {
                     List<CryptoModel> responseList = response.body();
                     cryptoModels = new ArrayList<>(responseList);
 
-                    for (CryptoModel crypto : responseList) {
+                    //recycleadap
+                    recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                    recyclerViewAdapter = new RecyclerViewAdapter(cryptoModels);
+                    recyclerView.setAdapter(recyclerViewAdapter);
+
+                    /*for (CryptoModel crypto : responseList) {
                         System.out.println(crypto.currency);
                         System.out.println(crypto.price);
                     }
+                    */
+
                 }
             }
 
